@@ -55,6 +55,15 @@ export async function GET(request: Request) {
       );
     }
 
+    if (profile.verified_email !== true) {
+      return NextResponse.redirect(
+        new URL(
+          "/sign-in?error=Google+did+not+confirm+a+verified+email+address",
+          request.url
+        )
+      );
+    }
+
     let user = await prisma.users.findUnique({ where: { email } });
 
     // Penegakan SRS-FR-AUTH-04 & TC-02-03: Tolak penggabungan akun otomatis jika email sudah terdaftar sebagai akun LOCAL
