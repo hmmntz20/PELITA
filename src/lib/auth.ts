@@ -112,15 +112,21 @@ export async function sendVerificationEmail(
 
   // Escape user-supplied values before inserting them into the HTML email.
   const escapeHtml = (value: string) =>
-    value.replace(/[&<>"\x27]/g, (char) => {
-      const entities: Record<string, string> = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '" ': "&quot;",
-        "\x27": "&#39;",
-      };
-      return entities[char] ?? char;
+    value.replace(/[&<>"']/g, (char) => {
+      switch (char) {
+        case "&":
+          return "&amp;";
+        case "<":
+          return "&lt;";
+        case ">":
+          return "&gt;";
+        case '"':
+          return "&quot;";
+        case "'":
+          return "&#39;";
+        default:
+          return char;
+      }
     });
   const safeUsername = escapeHtml(username);
   const safeVerifyUrl = escapeHtml(verifyUrl);
