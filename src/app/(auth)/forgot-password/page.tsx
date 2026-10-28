@@ -53,13 +53,13 @@ export default function ForgotPasswordPage() {
         {/* Label + Title */}
         <div>
           <p className="text-[0.6rem] tracking-[0.18em] uppercase text-foreground/40 font-medium mb-1">
-            Let's get you back
+            Let&apos;s get you back
           </p>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
             Reset Password
           </h2>
           <p className="text-xs text-foreground/45 mt-1">
-            We'll send a single-use reset link to your email.
+            We&apos;ll send a single-use reset link to your email.
           </p>
         </div>
 

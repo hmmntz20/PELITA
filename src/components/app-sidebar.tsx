@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
   Calendar,
@@ -50,6 +50,7 @@ const navItems: NavItem[] = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <aside className="w-[250px] shrink-0 flex flex-col border-r border-[#D4D4D8] bg-white h-full select-none">
@@ -138,13 +139,22 @@ export function AppSidebar() {
               </p>
             </div>
           </div>
-          <Link
-            href="/sign-in"
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await fetch("/api/auth/logout", { method: "POST" });
+              } catch (err) {
+                console.error("Sign out error:", err);
+              }
+              router.push("/sign-in");
+              router.refresh();
+            }}
             title="Sign out"
             className="p-1 rounded-lg text-[#71717A] hover:text-[#18181B] hover:bg-[#F4F4F5] transition shrink-0"
           >
             <LogOut className="w-3.5 h-3.5" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>
