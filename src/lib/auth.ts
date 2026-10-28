@@ -64,25 +64,66 @@ export async function sendVerificationEmail(
   username: string,
   rawToken: string
 ): Promise<{ sent: boolean; verifyUrl: string; errorReason?: string }> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const verifyUrl = `${appUrl}/api/auth/verify-email?token=${rawToken}`;
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/+$/, "");
+  const appUrl =
+    configuredAppUrl ||
+    (process.env.NODE_ENV === "production" ? "" : "http://localhost:3000");
+  const verifyUrl = appUrl
+    ? appUrl + "/api/auth/verify-email?token=" + rawToken
+    : "";
 
   const smtpHost = process.env.SMTP_HOST?.trim();
   const smtpUser = process.env.SMTP_USER?.trim();
-  const smtpPass = process.env.SMTP_PASS?.trim();
+  // SMTP providers commonly expose an app password or API key instead of SMTP_PASS.
+  const smtpPass = [
+    process.env.SMTP_PASS,
+    process.env.SMTP_PASSWORD,
+    process.env.SMTP_KEY,
+    process.env.SMTP_API_KEY,
+  ].map((value) => value?.trim()).find((value): value is string => Boolean(value));
   const smtpPort = Number(process.env.SMTP_PORT || "587");
+  const smtpFrom = process.env.SMTP_FROM?.trim() || smtpUser;
 
-  // Cetak tautan di log server lokal untuk mempermudah pengujian saat development
-  console.log(`\n[PELITA DEV] Verification link for ${email}: ${verifyUrl}\n`);
-
-  if (!smtpHost || !smtpUser || !smtpPass) {
+  if (!appUrl) {
     return {
       sent: false,
       verifyUrl,
       errorReason:
-        "Verification email could not be sent because the SMTP service is not configured on the server. Your account remains unverified.",
+        "Email verification cannot be sent because NEXT_PUBLIC_APP_URL is not configured for production.",
     };
   }
+
+  if (
+    !smtpHost ||
+    !smtpUser ||
+    !smtpPass ||
+    !smtpFrom ||
+    !Number.isInteger(smtpPort) ||
+    smtpPort < 1 ||
+    smtpPort > 65535
+  ) {
+    return {
+      sent: false,
+      verifyUrl,
+      errorReason:
+        "Verification email could not be sent because SMTP_HOST, SMTP_USER, SMTP_PASS (or SMTP_KEY), and a valid SMTP_PORT are required. Your account remains unverified.",
+    };
+  }
+
+  // Escape user-supplied values before inserting them into the HTML email.
+  const escapeHtml = (value: string) =>
+    value.replace(/[&<>"\x27]/g, (char) => {
+      const entities: Record<string, string> = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '" ': "&quot;",
+        "\x27": "&#39;",
+      };
+      return entities[char] ?? char;
+    });
+  const safeUsername = escapeHtml(username);
+  const safeVerifyUrl = escapeHtml(verifyUrl);
 
   try {
     const transporter = nodemailer.createTransport({
@@ -90,30 +131,38 @@ export async function sendVerificationEmail(
       port: smtpPort,
       secure: smtpPort === 465,
       auth: { user: smtpUser, pass: smtpPass },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
     });
 
     await transporter.sendMail({
-      from: `"PELITA Assistant" <${smtpUser}>`,
+      from: '"PELITA Assistant" <' + smtpFrom + ">",
       to: email,
       subject: "Verify your PELITA account email address",
+      text:
+        "Welcome to PELITA, " +
+        username +
+        "! Please verify your email address using this single-use link, valid for 24 hours: " +
+        verifyUrl,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-          <h2>Welcome to PELITA, ${username}!</h2>
+          <h2>Welcome to PELITA, ${safeUsername}!</h2>
           <p>Please verify your email address by clicking the single-use link below (valid for 24 hours):</p>
-          <p><a href="${verifyUrl}" style="display:inline-block;padding:10px 18px;background:#18181b;color:#fff;text-decoration:none;border-radius:6px;">Verify Email Address</a></p>
-          <p style="font-size:12px;color:#71717a;">Or copy this URL: ${verifyUrl}</p>
+          <p><a href="${safeVerifyUrl}" style="display:inline-block;padding:10px 18px;background:#18181b;color:#fff;text-decoration:none;border-radius:6px;">Verify Email Address</a></p>
+          <p style="font-size:12px;color:#71717a;">Or copy this URL: ${safeVerifyUrl}</p>
         </div>
       `,
     });
 
     return { sent: true, verifyUrl };
   } catch (error) {
-    console.error("[SmtpMailerAdapter] Failed to send email:", error);
+    console.error("[SmtpMailerAdapter] Failed to send verification email:", error);
     return {
       sent: false,
       verifyUrl,
       errorReason:
-        "Verification email could not be sent. SMTP service unavailable.",
+        "Verification email could not be sent. Please check your SMTP settings and try again.",
     };
   }
 }
