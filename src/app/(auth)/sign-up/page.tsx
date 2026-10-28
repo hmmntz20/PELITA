@@ -1,5 +1,6 @@
 "use client";
 
+import { Apple} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -85,19 +86,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-      {/* Hero text */}
-      <div className="text-center mb-10">
-        <h1 className="text-[2rem] font-bold tracking-tight text-foreground leading-tight">
-          A little space for your whole life.
-        </h1>
-        <p className="text-sm text-foreground/50 mt-2">
-          Plan your time. Control your money. Understand your health.
-        </p>
-      </div>
-
-      {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
+    <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
         {/* Success screen after account creation */}
         {successData ? (
           <div className="flex flex-col gap-4 text-center py-2 animate-in fade-in duration-300">
@@ -134,24 +123,6 @@ export default function SignUpPage() {
               {successData.message}
             </div>
 
-            {/* Dev mode quick verify button */}
-            {successData.devVerifyUrl && (
-              <div className="p-3 bg-blue-50 border border-blue-200/80 rounded-xl flex flex-col gap-1 text-left">
-                <span className="text-[11px] font-semibold text-blue-900">
-                  Development Mode:
-                </span>
-                <p className="text-[11px] text-blue-700">
-                  No SMTP needed. You can verify this account immediately:
-                </p>
-                <a
-                  href={successData.devVerifyUrl}
-                  className="mt-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 py-1.5 px-3 rounded-lg text-center transition"
-                >
-                  Verify Email Now →
-                </a>
-              </div>
-            )}
-
             <Link
               href="/sign-in"
               className="mt-2 w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center justify-center gap-2 hover:bg-foreground/85 transition-all"
@@ -162,41 +133,11 @@ export default function SignUpPage() {
         ) : (
           <>
             {/* Icon banner */}
-            <div className="w-full h-20 bg-[#f0f0ef] rounded-xl flex items-center justify-center">
-              {/* Apple / nutrition icon */}
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="text-foreground/40"
-              >
-                <path
-                  d="M16 9C16 9 12 3 8 5C5 7 5 11 7 14C9 17 13 19 16 19C19 19 23 17 25 14C27 11 27 7 24 5C20 3 16 9 16 9Z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M16 9V19"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M10 19C10 23.4 12.7 27 16 27C19.3 27 22 23.4 22 19"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M16 5V7"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-              </svg>
+            <div className="w-full h-20 bg-[#efefee] rounded-xl flex items-center justify-center border">
+              <Apple
+                className="w-7 h-7 text-foreground/40"
+                strokeWidth={1.5}
+              />
             </div>
 
             {/* Label + Title */}
@@ -525,7 +466,6 @@ export default function SignUpPage() {
             </p>
           </>
         )}
-      </div>
     </div>
   );
 }

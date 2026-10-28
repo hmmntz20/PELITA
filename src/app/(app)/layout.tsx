@@ -52,12 +52,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isResizing]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-white">
+    <div className="flex h-screen w-screen overflow-hidden">
       {/* 220px Sidebar */}
       <AppSidebar />
 
       {/* Main Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-white">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden bg-[#ededee]">
         <TopNav
           section="Workspace"
           page={pageName}

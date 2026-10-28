@@ -1,53 +1,17 @@
 "use client";
 
+import { Wallet } from "lucide-react";
 import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-      {/* Hero text */}
-      <div className="text-center mb-10">
-        <h1 className="text-[2rem] font-bold tracking-tight text-foreground leading-tight">
-          A little space for your whole life.
-        </h1>
-        <p className="text-sm text-foreground/50 mt-2">
-          Plan your time. Control your money. Understand your health.
-        </p>
-      </div>
-
-      {/* Card */}
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
+    <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
         {/* Icon banner */}
-        <div className="w-full h-20 bg-[#f0f0ef] rounded-xl flex items-center justify-center">
-          {/* Key icon */}
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-foreground/40"
-          >
-            <circle
-              cx="12"
-              cy="13"
-              r="5.5"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <path
-              d="M16 17L26 27"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-            <path
-              d="M22 23L25 20"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
+        <div className="w-full h-20 bg-[#efefee] rounded-xl flex items-center justify-center border">
+          <Wallet
+            className="w-7 h-7 text-foreground/40"
+            strokeWidth={1.5}
+          />
         </div>
 
         {/* Label + Title */}
@@ -146,7 +110,6 @@ export default function ForgotPasswordPage() {
             Back to Sign In
           </Link>
         </p>
-      </div>
     </div>
   );
 }

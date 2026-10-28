@@ -2,7 +2,32 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState, useTransition } from "react";
+import { Calendar } from "lucide-react";
+
+// Hanya untuk diagnosis di mode development (muncul di bawah loader saat tombol uji diklik)
+function LoaderDebug() {
+  const [info, setInfo] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const reduced = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      const running = document
+        .getAnimations()
+        .filter((a) => a.playState === "running").length;
+      setInfo(
+        `reduced-motion: ${reduced ? "ON (bar hanya berkedip)" : "OFF"} · animasi berjalan: ${running}`
+      );
+    }, 400);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <p className="absolute bottom-8 text-xs text-foreground/50">{info}</p>
+  );
+}
 
 function SignInForm() {
   const router = useRouter();
@@ -16,6 +41,11 @@ function SignInForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // true hanya selama navigasi ke dashboard berlangsung, lalu otomatis false
+  // (tidak ikut "menempel" kalau halaman ini disimpan/dipulihkan oleh Next.js)
+  const [isRedirecting, startRedirect] = useTransition();
+  // Hanya untuk pengujian: tampilkan loader selama 5 detik (tombol di bawah form)
+  const [isPreviewingLoader, setIsPreviewingLoader] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null);
 
@@ -24,6 +54,11 @@ function SignInForm() {
     queryVerified === "1" || queryMessage
       ? queryMessage || "Email verified successfully. You can now sign in."
       : null;
+
+  function previewLoader() {
+    setIsPreviewingLoader(true);
+    setTimeout(() => setIsPreviewingLoader(false), 5000);
+  }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -71,8 +106,14 @@ function SignInForm() {
       const redirectTarget =
         searchParams.get("redirect") || data?.redirectTo || "/dashboard";
 
-      router.push(redirectTarget);
-      router.refresh();
+      // Jangan biarkan password tersisa di state setelah login
+      setPassword("");
+
+      // Loader layar penuh tampil selama navigasi ke dashboard (isRedirecting)
+      startRedirect(() => {
+        router.push(redirectTarget);
+        router.refresh();
+      });
     } catch (err) {
       console.error("[SignIn] Network or parsing error:", err);
       setFormError(
@@ -84,66 +125,14 @@ function SignInForm() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-4 py-10">
-      {/* Hero text */}
-      <div className="text-center mb-10">
-        <h1 className="text-[2rem] font-bold tracking-tight text-foreground leading-tight">
-          A little space for your whole life.
-        </h1>
-        <p className="text-sm text-foreground/50 mt-2">
-          Plan your time. Control your money. Understand your health.
-        </p>
-      </div>
-
-      {/* Card */}
+    <>
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
         {/* Icon banner */}
-        <div className="w-full h-20 bg-[#f0f0ef] rounded-xl flex items-center justify-center">
-          {/* Calendar icon */}
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 32 32"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="text-foreground/40"
-          >
-            <rect
-              x="3"
-              y="5"
-              width="26"
-              height="22"
-              rx="3"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <line
-              x1="3"
-              y1="12"
-              x2="29"
-              y2="12"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <line
-              x1="10"
-              y1="3"
-              x2="10"
-              y2="9"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-            <line
-              x1="22"
-              y1="3"
-              x2="22"
-              y2="9"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
+        <div className="w-full h-20 bg-[#efefee] rounded-xl flex items-center justify-center border">
+          <Calendar
+            className="w-7 h-7 text-foreground/40"
+            strokeWidth={1.5}
+          />
         </div>
 
         {/* Label + Title */}
@@ -198,21 +187,6 @@ function SignInForm() {
                 {errorMessage}
               </div>
             </div>
-
-            {/* Dev mode email verification quick link */}
-            {devVerifyUrl && (
-              <div className="pt-2 border-t border-rose-200/70 flex flex-col gap-1">
-                <span className="text-[11px] text-rose-700 font-medium">
-                  Testing environment link:
-                </span>
-                <a
-                  href={devVerifyUrl}
-                  className="text-[11px] font-semibold text-blue-600 underline hover:text-blue-800 break-all"
-                >
-                  Click here to verify email address now →
-                </a>
-              </div>
-            )}
           </div>
         )}
 
@@ -487,7 +461,7 @@ function SignInForm() {
           </Link>
         </p>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -504,4 +478,3 @@ export default function SignInPage() {
     </Suspense>
   );
 }
-
