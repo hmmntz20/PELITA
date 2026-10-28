@@ -1,0 +1,313 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model attachment_files {
+  id                   String                 @id @db.Uuid
+  user_id              String                 @db.Uuid
+  storage_path         String
+  mime_type            String                 @db.VarChar(100)
+  size_bytes           Int
+  is_temporary         Boolean                @default(false)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  finance_transactions finance_transactions[]
+  meal_logs            meal_logs[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model budget_limits {
+  id                  String  @id @db.Uuid
+  user_id             String  @db.Uuid
+  period_type         String  @db.VarChar(20)
+  limit_amount_idr    Decimal @default(50000) @db.Decimal(15, 2)
+  warn_threshold_pct  Int     @default(80)
+  last_notified_key   String? @db.VarChar(50)
+  last_notified_level Int     @default(0)
+  users               users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model categories {
+  id                   String                 @id @db.Uuid
+  user_id              String?                @db.Uuid
+  name                 String                 @db.VarChar(100)
+  type                 String                 @db.VarChar(20)
+  is_default           Boolean                @default(false)
+  is_archived          Boolean                @default(false)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  users                users?                 @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  finance_transactions finance_transactions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model custom_foods {
+  id             String           @id @db.Uuid
+  user_id        String           @db.Uuid
+  food_code      String           @db.VarChar(50)
+  food_name      String           @db.VarChar(150)
+  serving_unit   String           @db.VarChar(10)
+  serving_size   Decimal          @db.Decimal(7, 2)
+  calories_kcal  Decimal          @default(0) @db.Decimal(7, 2)
+  protein_g      Decimal          @default(0) @db.Decimal(6, 2)
+  carbs_g        Decimal          @default(0) @db.Decimal(6, 2)
+  fat_g          Decimal          @default(0) @db.Decimal(6, 2)
+  fiber_g        Decimal          @default(0) @db.Decimal(6, 2)
+  water_ml       Decimal          @default(0) @db.Decimal(7, 2)
+  sugar_g        Decimal          @default(0) @db.Decimal(6, 2)
+  sodium_mg      Decimal          @default(0) @db.Decimal(7, 2)
+  users          users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  meal_log_items meal_log_items[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model favorite_meals {
+  id                  String   @id @db.Uuid
+  user_id             String   @db.Uuid
+  meal_name           String   @db.VarChar(150)
+  default_portion     String   @db.VarChar(20)
+  items_template_json Json
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  users               users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model finance_transaction_items {
+  id                   String               @id @db.Uuid
+  transaction_id       String               @db.Uuid
+  item_code            String               @db.VarChar(50)
+  item_name            String               @db.VarChar(150)
+  unit                 String               @db.VarChar(30)
+  quantity             Decimal              @db.Decimal(10, 2)
+  unit_price_idr       Decimal              @db.Decimal(15, 2)
+  subtotal_idr         Decimal              @db.Decimal(15, 2)
+  finance_transactions finance_transactions @relation(fields: [transaction_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model finance_transactions {
+  id                         String                      @id @db.Uuid
+  user_id                    String                      @db.Uuid
+  wallet_id                  String                      @db.Uuid
+  category_id                String                      @db.Uuid
+  type                       String                      @db.VarChar(20)
+  amount_idr                 Decimal                     @db.Decimal(15, 2)
+  transaction_date           DateTime                    @db.Timestamptz(6)
+  merchant_or_desc           String                      @db.VarChar(255)
+  line_items_json            Json?
+  linked_expense_id          String?                     @db.Uuid
+  receipt_file_id            String?                     @db.Uuid
+  created_at                 DateTime                    @default(now()) @db.Timestamptz(6)
+  finance_transaction_items  finance_transaction_items[]
+  categories                 categories                  @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  finance_transactions       finance_transactions?       @relation("finance_transactionsTofinance_transactions", fields: [linked_expense_id], references: [id], onUpdate: NoAction)
+  other_finance_transactions finance_transactions[]      @relation("finance_transactionsTofinance_transactions")
+  attachment_files           attachment_files?           @relation(fields: [receipt_file_id], references: [id], onUpdate: NoAction)
+  users                      users                       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  wallets                    wallets                     @relation(fields: [wallet_id], references: [id], onUpdate: NoAction)
+}
+
+model idempotency_records {
+  id              String   @id @db.Uuid
+  user_id         String   @db.Uuid
+  idempotency_key String   @db.VarChar(150)
+  action_type     String   @db.VarChar(80)
+  response_json   Json
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  users           users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, idempotency_key])
+}
+
+model in_app_notifications {
+  id              String         @id @db.Uuid
+  user_id         String         @db.Uuid
+  reminder_job_id String?        @db.Uuid
+  title           String         @db.VarChar(150)
+  message         String
+  is_read         Boolean        @default(false)
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  reminder_jobs   reminder_jobs? @relation(fields: [reminder_job_id], references: [id], onUpdate: NoAction)
+  users           users          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model meal_log_items {
+  id                String        @id @db.Uuid
+  meal_log_id       String        @db.Uuid
+  custom_food_id    String?       @db.Uuid
+  food_name         String        @db.VarChar(150)
+  portion_category  String        @db.VarChar(20)
+  weight_gram_or_ml Decimal       @db.Decimal(7, 2)
+  calories_kcal     Decimal       @default(0) @db.Decimal(7, 2)
+  protein_g         Decimal       @default(0) @db.Decimal(6, 2)
+  carbs_g           Decimal       @default(0) @db.Decimal(6, 2)
+  fat_g             Decimal       @default(0) @db.Decimal(6, 2)
+  fiber_g           Decimal       @default(0) @db.Decimal(6, 2)
+  water_ml          Decimal       @default(0) @db.Decimal(7, 2)
+  sugar_g           Decimal       @default(0) @db.Decimal(6, 2)
+  sodium_mg         Decimal       @default(0) @db.Decimal(7, 2)
+  custom_foods      custom_foods? @relation(fields: [custom_food_id], references: [id], onUpdate: NoAction)
+  meal_logs         meal_logs     @relation(fields: [meal_log_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model meal_logs {
+  id               String            @id @db.Uuid
+  user_id          String            @db.Uuid
+  logged_at        DateTime          @db.Timestamptz(6)
+  meal_title       String            @db.VarChar(100)
+  is_ai_estimate   Boolean           @default(false)
+  photo_file_id    String?           @db.Uuid
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  meal_log_items   meal_log_items[]
+  attachment_files attachment_files? @relation(fields: [photo_file_id], references: [id], onUpdate: NoAction)
+  users            users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model nutrition_profiles {
+  id                   String  @id @db.Uuid
+  user_id              String  @unique @db.Uuid
+  goal                 String  @db.VarChar(20)
+  age                  Int
+  gender               String  @db.VarChar(15)
+  height_cm            Decimal @db.Decimal(5, 2)
+  weight_kg            Decimal @db.Decimal(5, 2)
+  target_weight_kg     Decimal @db.Decimal(5, 2)
+  activity_level       String  @db.VarChar(30)
+  target_calories_kcal Decimal @db.Decimal(7, 2)
+  target_protein_g     Decimal @db.Decimal(6, 2)
+  target_carbs_g       Decimal @db.Decimal(6, 2)
+  target_fat_g         Decimal @db.Decimal(6, 2)
+  target_fiber_g       Decimal @db.Decimal(6, 2)
+  target_water_ml      Decimal @db.Decimal(7, 2)
+  max_sugar_g          Decimal @db.Decimal(6, 2)
+  max_sodium_mg        Decimal @db.Decimal(7, 2)
+  users                users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model push_subscriptions {
+  id         String   @id @db.Uuid
+  user_id    String   @db.Uuid
+  endpoint   String   @unique
+  p256dh_key String
+  auth_key   String
+  user_agent String   @db.VarChar(255)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model recurrence_rules {
+  id              String         @id @db.Uuid
+  schedule_id     String         @unique @db.Uuid
+  frequency       String         @db.VarChar(20)
+  days_of_week    Int[]
+  end_date        DateTime?      @db.Timestamptz(6)
+  max_occurrences Int?
+  excluded_dates  String[]       @default([])
+  schedule_items  schedule_items @relation(fields: [schedule_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reminder_jobs {
+  id                   String                 @id @db.Uuid
+  user_id              String                 @db.Uuid
+  domain_type          String                 @db.VarChar(20)
+  reference_id         String                 @db.Uuid
+  scheduled_at         DateTime               @db.Timestamptz(6)
+  status               String                 @db.VarChar(20)
+  retry_count          Int                    @default(0)
+  in_app_notifications in_app_notifications[]
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model schedule_items {
+  id                  String            @id @db.Uuid
+  user_id             String            @db.Uuid
+  type                String            @db.VarChar(20)
+  title               String            @db.VarChar(200)
+  start_at            DateTime          @db.Timestamptz(6)
+  end_at              DateTime?         @db.Timestamptz(6)
+  timezone            String            @default("Asia/Jakarta") @db.VarChar(64)
+  category            String            @db.VarChar(80)
+  status              String            @db.VarChar(40)
+  reminder_offset_min Int               @default(60)
+  recurrence_rules    recurrence_rules?
+  users               users             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user_sessions {
+  id         String    @id @db.Uuid
+  user_id    String    @db.Uuid
+  token_hash String    @unique @db.VarChar(255)
+  expires_at DateTime  @db.Timestamptz(6)
+  revoked_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                   String                 @id @db.Uuid
+  email                String                 @unique @db.VarChar(255)
+  username             String                 @db.VarChar(100)
+  password_hash        String?
+  auth_method          String                 @db.VarChar(20)
+  email_verified       Boolean                @default(false)
+  timezone             String                 @default("Asia/Jakarta") @db.VarChar(64)
+  theme                String                 @default("LIGHT") @db.VarChar(20)
+  allow_external_ai    Boolean                @default(false)
+  nutrition_reminder   String                 @default("19:00") @db.VarChar(5)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  attachment_files     attachment_files[]
+  budget_limits        budget_limits[]
+  categories           categories[]
+  custom_foods         custom_foods[]
+  favorite_meals       favorite_meals[]
+  finance_transactions finance_transactions[]
+  idempotency_records  idempotency_records[]
+  in_app_notifications in_app_notifications[]
+  meal_logs            meal_logs[]
+  nutrition_profiles   nutrition_profiles?
+  push_subscriptions   push_subscriptions[]
+  reminder_jobs        reminder_jobs[]
+  schedule_items       schedule_items[]
+  user_sessions        user_sessions[]
+  verification_tokens  verification_tokens[]
+  wallets              wallets[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model verification_tokens {
+  id          String    @id @db.Uuid
+  user_id     String    @db.Uuid
+  token_hash  String    @unique @db.VarChar(255)
+  purpose     String    @db.VarChar(30)
+  expires_at  DateTime  @db.Timestamptz(6)
+  consumed_at DateTime? @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model wallets {
+  id                   String                 @id @db.Uuid
+  user_id              String                 @db.Uuid
+  name                 String                 @db.VarChar(100)
+  currency             String                 @default("IDR") @db.Char(3)
+  initial_balance      Decimal                @default(0) @db.Decimal(15, 2)
+  current_balance      Decimal                @default(0) @db.Decimal(15, 2)
+  is_archived          Boolean                @default(false)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  finance_transactions finance_transactions[]
+  users                users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}

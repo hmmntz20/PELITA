@@ -1,0 +1,84 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. KONTAINER BASIS DATA UTAMA (PostgreSQL 16)
+  # ---------------------------------------------------------------------------
+  pelita-db:
+    image: postgres:16-alpine
+    container_name: pelita-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ}
+    # Diikat ke 127.0.0.1 agar hanya bisa diakses dari host Ubuntu lokal (tidak terekspos ke publik)
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pelita_pgdata:/var/lib/postgresql/data
+      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pelita-net
+
+  # ---------------------------------------------------------------------------
+  # 2. KONTAINER APLIKASI WEB FULL-STACK (Next.js App Router + TypeScript)
+  # ---------------------------------------------------------------------------
+  pelita-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    container_name: pelita-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    # Diikat ke 127.0.0.1:3000 untuk diteruskan secara privat melalui Tailscale Serve (HTTPS)
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./storage/uploads:/var/lib/pelita/uploads
+      - ./storage/processing:/tmp/pelita-processing
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      pelita-db:
+        condition: service_healthy
+    networks:
+      - pelita-net
+
+  # ---------------------------------------------------------------------------
+  # 3. KONTAINER BACKGROUND WORKER PERSISTEN (Node.js + pg-boss Scheduler)
+  # ---------------------------------------------------------------------------
+  pelita-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    container_name: pelita-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./storage/uploads:/var/lib/pelita/uploads
+      - ./storage/processing:/tmp/pelita-processing
+    depends_on:
+      pelita-db:
+        condition: service_healthy
+    networks:
+      - pelita-net
+
+volumes:
+  pelita_pgdata:
+    name: pelita_pgdata
+
+networks:
+  pelita-net:
+    name: pelita-net
+    driver: bridge
