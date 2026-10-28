@@ -79,7 +79,10 @@ export async function POST(request: Request) {
           ? "Account created! Please check your email inbox to verify your address before signing in."
           : mailResult.errorReason,
         // Disertakan hanya pada mode development lokal agar Anda dapat menguji klik verifikasi tanpa SMTP
-        devVerifyUrl: process.env.NODE_ENV !== "production" ? mailResult.verifyUrl : undefined,
+        devVerifyUrl:
+          !mailResult.sent && process.env.NODE_ENV !== "production"
+            ? mailResult.verifyUrl
+            : undefined,
       },
       { status: 201 }
     );
