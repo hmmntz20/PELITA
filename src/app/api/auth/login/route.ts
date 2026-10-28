@@ -61,9 +61,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           code: "EMAIL_NOT_VERIFIED",
-          error: "Please verify your email address before signing in.",
+          error: mailResult.sent
+            ? "Please verify your email address before signing in."
+            : mailResult.errorReason ||
+              "Your email is not verified and the verification email could not be sent. Please try again later.",
           devVerifyUrl:
-            process.env.NODE_ENV !== "production" ? mailResult.verifyUrl : undefined,
+            !mailResult.sent && process.env.NODE_ENV !== "production"
+              ? mailResult.verifyUrl
+              : undefined,
         },
         { status: 403 }
       );
