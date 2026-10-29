@@ -1,9 +1,11 @@
+// src/app/(auth)/sign-in/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, useTransition } from "react";
 import { Calendar } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
 
 // Hanya untuk diagnosis di mode development (muncul di bawah loader saat tombol uji diklik)
 function LoaderDebug() {
@@ -18,14 +20,14 @@ function LoaderDebug() {
         .getAnimations()
         .filter((a) => a.playState === "running").length;
       setInfo(
-        `reduced-motion: ${reduced ? "ON (bar hanya berkedip)" : "OFF"} · animasi berjalan: ${running}`
+        `reduced-motion: ${reduced ? "ON (JS random bar tetap aktif)" : "OFF"} · transisi berjalan: ${running}`
       );
     }, 400);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <p className="absolute bottom-8 text-xs text-foreground/50">{info}</p>
+    <p className="absolute bottom-8 text-xs text-white/50 font-mono">{info}</p>
   );
 }
 
@@ -41,10 +43,11 @@ function SignInForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // true hanya selama navigasi ke dashboard berlangsung, lalu otomatis false
-  // (tidak ikut "menempel" kalau halaman ini disimpan/dipulihkan oleh Next.js)
+  // State khusus saat redirect menuju Google OAuth (/api/auth/google)
+  const [isGoogleRedirecting, setIsGoogleRedirecting] = useState(false);
+  // true selama navigasi router.push ke dashboard berlangsung
   const [isRedirecting, startRedirect] = useTransition();
-  // Hanya untuk pengujian: tampilkan loader selama 5 detik (tombol di bawah form)
+  // Hanya untuk pengujian: tampilkan loader selama 5 detik
   const [isPreviewingLoader, setIsPreviewingLoader] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [devVerifyUrl, setDevVerifyUrl] = useState<string | null>(null);
@@ -54,6 +57,18 @@ function SignInForm() {
     queryVerified === "1" || queryMessage
       ? queryMessage || "Email verified successfully. You can now sign in."
       : null;
+
+  // Reset state Google redirect jika user menekan tombol Back di browser dari halaman Google
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setIsGoogleRedirecting(false);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   function previewLoader() {
     setIsPreviewingLoader(true);
@@ -95,10 +110,10 @@ function SignInForm() {
       if (!response.ok) {
         setFormError(data?.error || "Invalid email address or password.");
 
-        // If email not verified in local dev, an instant link is provided
         if (data?.devVerifyUrl) {
           setDevVerifyUrl(data.devVerifyUrl);
         }
+        setIsLoading(false);
         return;
       }
 
@@ -108,8 +123,9 @@ function SignInForm() {
 
       // Jangan biarkan password tersisa di state setelah login
       setPassword("");
+      setIsLoading(false);
 
-      // Loader layar penuh tampil selama navigasi ke dashboard (isRedirecting)
+      // Aktifkan Fullscreen Loader selama proses navigasi ke dashboard
       startRedirect(() => {
         router.push(redirectTarget);
         router.refresh();
@@ -119,13 +135,34 @@ function SignInForm() {
       setFormError(
         "Unable to connect to the authentication server. Please check your connection."
       );
-    } finally {
       setIsLoading(false);
     }
   }
 
+  function handleGoogleSignIn() {
+    setFormError(null);
+    setIsGoogleRedirecting(true);
+    window.location.href = "/api/auth/google";
+  }
+
+  const isBusy = isLoading || isRedirecting || isGoogleRedirecting;
+  const showFullscreenLoader =
+    isRedirecting || isGoogleRedirecting || isPreviewingLoader;
+
+  const fullscreenLabel = isPreviewingLoader
+    ? "Previewing PELITA Loader..."
+    : isGoogleRedirecting
+    ? "Connecting to Google..."
+    : "Entering Dashboard...";
+
   return (
     <>
+      {showFullscreenLoader && (
+        <Loader mode="fullscreen" variant="light" label={fullscreenLabel}>
+          {isPreviewingLoader && <LoaderDebug />}
+        </Loader>
+      )}
+
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
         {/* Icon banner */}
         <div className="w-full h-20 bg-[#efefee] rounded-xl flex items-center justify-center border">
@@ -148,11 +185,11 @@ function SignInForm() {
           </p>
         </div>
 
-        {/* Success Alert */}
+        {/* Success Alert (Monochrome) */}
         {successMessage && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/90 p-3 text-xs text-emerald-800 flex items-start gap-2.5">
+          <div className="rounded-xl border border-black/15 bg-black/[0.03] p-3 text-xs text-foreground flex items-start gap-2.5">
             <svg
-              className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5"
+              className="w-4 h-4 shrink-0 text-foreground mt-0.5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -170,10 +207,10 @@ function SignInForm() {
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50/90 p-3 text-xs text-rose-800 flex flex-col gap-2">
+          <div className="rounded-xl border border-black/20 bg-black/[0.04] p-3 text-xs text-foreground flex flex-col gap-2">
             <div className="flex items-start gap-2.5">
               <svg
-                className="w-4 h-4 shrink-0 text-rose-500 mt-0.5"
+                className="w-4 h-4 shrink-0 text-foreground mt-0.5"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -187,6 +224,16 @@ function SignInForm() {
                 {errorMessage}
               </div>
             </div>
+            {devVerifyUrl && (
+              <div className="pt-1.5 border-t border-black/10">
+                <a
+                  href={devVerifyUrl}
+                  className="inline-block font-semibold text-foreground underline"
+                >
+                  [Dev Mode] Click here to verify email now &rarr;
+                </a>
+              </div>
+            )}
           </div>
         )}
 
@@ -232,7 +279,7 @@ function SignInForm() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isBusy}
                 placeholder="you@example.com"
                 required
                 className="w-full h-10 rounded-lg border border-black/10 bg-transparent pl-9 pr-3 text-sm text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10 transition disabled:opacity-50"
@@ -288,7 +335,7 @@ function SignInForm() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isBusy}
                 placeholder="At least 8 characters"
                 required
                 className="w-full h-10 rounded-lg border border-black/10 bg-transparent pl-9 pr-9 text-sm text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10 transition disabled:opacity-50"
@@ -359,33 +406,14 @@ function SignInForm() {
           <button
             id="signin-submit"
             type="submit"
-            disabled={isLoading}
-            className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center justify-center gap-2 hover:bg-foreground/85 active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isBusy}
+            className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center justify-center gap-2.5 hover:bg-foreground/85 active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-1 h-4 w-4 text-background"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Signing In...
-              </>
+            {isLoading || isRedirecting ? (
+              <Loader
+                mode="inline"
+                label={isRedirecting ? "Redirecting..." : "Signing In..."}
+              />
             ) : (
               <>
                 Sign In
@@ -420,34 +448,45 @@ function SignInForm() {
         <button
           id="signin-google"
           type="button"
-          onClick={() => {
-            window.location.href = "/api/auth/google";
-          }}
-          className="w-full h-10 rounded-xl border border-black/10 bg-transparent text-sm font-medium text-foreground/70 flex items-center justify-center gap-2.5 hover:bg-black/[0.03] active:translate-y-px transition-all"
+          disabled={isBusy}
+          onClick={handleGoogleSignIn}
+          className="w-full h-10 rounded-xl border border-black/10 bg-transparent text-sm font-medium text-foreground/70 flex items-center justify-center gap-2.5 hover:bg-black/[0.03] active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {/* Google icon */}
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="8" cy="8" r="7.5" stroke="#E0E0E0" strokeWidth="1" />
-            <path
-              d="M8 3.5A4.5 4.5 0 1 0 11.182 11"
-              stroke="#4285F4"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
-            <path
-              d="M8 8h3.5"
-              stroke="#4285F4"
-              strokeWidth="1.3"
-              strokeLinecap="round"
-            />
-          </svg>
-          Continue with Google
+          {isGoogleRedirecting ? (
+            <Loader mode="inline" label="Connecting to Google..." />
+          ) : (
+            <>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="7.5"
+                  stroke="currentColor"
+                  strokeOpacity="0.25"
+                  strokeWidth="1"
+                />
+                <path
+                  d="M8 3.5A4.5 4.5 0 1 0 11.182 11"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M8 8h3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Continue with Google
+            </>
+          )}
         </button>
 
         {/* Footer */}
@@ -460,6 +499,17 @@ function SignInForm() {
             Sign Up
           </Link>
         </p>
+
+        {/* Tombol Uji Loader 5 Detik (Hanya tampil saat mode development) */}
+        {process.env.NODE_ENV !== "production" && (
+          <button
+            type="button"
+            onClick={previewLoader}
+            className="mt-1 text-[11px] text-foreground/35 hover:text-foreground/70 underline transition text-center"
+          >
+            [Dev] Test PELITA Fullscreen Loader (5s)
+          </button>
+        )}
       </div>
     </>
   );
@@ -467,13 +517,7 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex-1 flex items-center justify-center p-8 text-foreground/40 text-xs">
-          Loading sign in...
-        </div>
-      }
-    >
+    <Suspense fallback={<Loader mode="fullscreen" label="Loading Sign In..." />}>
       <SignInForm />
     </Suspense>
   );

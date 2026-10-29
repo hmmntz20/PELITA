@@ -24,7 +24,7 @@ export default function AuthLayout({
             viewBox="0 0 28 28"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-white"
+            className="text-[#ededee]"
           >
             <rect
               x="2"
@@ -51,9 +51,11 @@ export default function AuthLayout({
               fill="currentColor"
             />
           </svg>
-          {/* <span className="text-3xl font-bold tracking-tight">
+          <h1
+            className="text-4xl font-bold uppercase tracking-[0.38em] pl-[0.38em] text-white"
+          >
             PELITA
-          </span> */}
+          </h1>
         </div>
       </div>
 
@@ -61,10 +63,13 @@ export default function AuthLayout({
       <div className="w-full lg:w-[70%] bg-[#ededee] flex flex-col min-h-[70vh] lg:min-h-screen relative">
         
         {/* Tagline Kanan Atas */}
-        <div className="absolute top-0 right-0 p-8 w-full flex justify-end">
+        <div className="absolute top-0 left-0 p-8 w-full flex justify-between">
           <p className="text-[0.65rem] tracking-[0.18em] uppercase text-foreground/40 font-medium hidden sm:block">
             ✦ Your everyday, a little lighter
           </p>
+          <button>
+            toggle 
+          </button>
         </div>
 
         {/* Area Utama Form */}
