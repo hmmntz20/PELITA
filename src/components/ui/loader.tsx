@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useTheme } from "@/components/theme-provider";
 
 // ============================================================================
 // 1. KOMPONEN INTI: 3 BAR LOGO PELITA (GERAK NAIK-TURUN RANDOM)
@@ -9,8 +10,8 @@ import React, { useEffect, useState } from "react";
 export interface PelitaBarsProps {
   /** Ukuran tinggi kontainer bar */
   size?: "xs" | "sm" | "md" | "lg" | "xl";
-  /** Warna bar: 'light' (putih), 'dark' (hitam), atau 'current' (mengikuti warna teks) */
-  tone?: "light" | "dark" | "current";
+  /** Warna bar: 'light' (putih), 'dark' (hitam), 'theme' (otomatis tema), atau 'current' */
+  tone?: "light" | "dark" | "theme" | "current";
   /** Aktifkan efek glow/shadow lembut pada masing-masing bar */
   glow?: boolean;
   /** Kecepatan pengacakan dalam milidetik */
@@ -89,9 +90,11 @@ export function PelitaBars({
 
   const toneClass =
     tone === "light"
-      ? "bg-white"
+      ? "bg-[#F4F4F5]"
       : tone === "dark"
-      ? "bg-black"
+      ? "bg-[#18181B]"
+      : tone === "theme"
+      ? "bg-[var(--text-primary)]"
       : "bg-current";
 
   const glowStyle =
@@ -131,33 +134,34 @@ export function PelitaBars({
 }
 
 // ============================================================================
-// 2. VARIAN FULLSCREEN LOADER (DENGAN RADIAL SHADOW PERSIS GAMBAR REFERENSI)
+// 2. VARIAN FULLSCREEN LOADER (SESUAI DESAIN ANDA + OTOMATIS IKUT TEMA)
 // ============================================================================
 export interface FullscreenLoaderProps {
   label?: string;
   brandTitle?: string;
-  /** 'dark' = latar hitam dengan radial glow putih (default), 'light' = latar putih */
-  variant?: "dark" | "light";
+  /** 'auto' otomatis mengikuti Light/Dark mode aktif, atau paksa dengan 'dark' / 'light' */
+  variant?: "auto" | "dark" | "light";
   children?: React.ReactNode;
 }
 
 export function FullscreenLoader({
-  label = "Loading workspace...",
   brandTitle = "PELITA",
-  variant = "dark",
+  variant = "auto",
   children,
 }: FullscreenLoaderProps) {
-  const isDark = variant === "dark";
+  const { theme } = useTheme();
+  const resolvedVariant = variant === "auto" ? theme : variant;
+  const isDark = resolvedVariant === "dark";
 
   return (
     <div
       role="alert"
       aria-busy="true"
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 overflow-hidden select-none ${
-        isDark ? "bg-black text-white" : "bg-[#ededee] text-black"
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center p-6 overflow-hidden select-none transition-colors duration-200 ${
+        isDark ? "bg-[#18181B] text-[#F4F4F5]" : "bg-[#EDEDEE] text-[#18181B]"
       }`}
     >
-      {/* Lapisan Radial Spotlight / Ambient Shadow di Tengah */}
+      {/* Lapisan Radial Spotlight / Ambient Shadow di Tengah (Sesuai Racikan Anda) */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
@@ -174,7 +178,7 @@ export function FullscreenLoader({
 
       {/* Konten Utama di Atas Radial Shadow */}
       <div className="relative z-10 flex flex-col items-center w-full max-w-[290px]">
-        {/* 3 Bar Kapsul Putih Mengambang Tanpa Kotak Border */}
+        {/* 3 Bar Kapsul Mengambang Tanpa Kotak Border */}
         <div className="mb-8">
           <PelitaBars
             size="lg"
@@ -187,7 +191,7 @@ export function FullscreenLoader({
         {brandTitle && (
           <h1
             className={`text-2xl font-bold uppercase tracking-[0.38em] pl-[0.38em] mb-7 ${
-              isDark ? "text-white" : "text-black"
+              isDark ? "text-[#F4F4F5]" : "text-[#18181B]"
             }`}
           >
             {brandTitle}
@@ -205,7 +209,7 @@ export function FullscreenLoader({
 // ============================================================================
 export interface InlineLoaderProps {
   size?: "xs" | "sm";
-  tone?: "light" | "dark" | "current";
+  tone?: "light" | "dark" | "theme" | "current";
   label?: string;
   className?: string;
 }
@@ -240,26 +244,26 @@ export function AIChatLoader({
 }: AIChatLoaderProps) {
   return (
     <div
-      className={`w-full rounded-2xl border border-black/10 bg-white p-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.03)] flex flex-col gap-3 ${className}`}
+      className={`w-full rounded-2xl border border-[var(--border-surface)] bg-[var(--surface)] p-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.03)] flex flex-col gap-3 transition-colors ${className}`}
     >
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center shrink-0">
-          <PelitaBars size="xs" tone="light" intervalMs={210} />
+        <div className="w-8 h-8 rounded-xl bg-[var(--action-primary)] text-[var(--action-primary-text)] flex items-center justify-center shrink-0">
+          <PelitaBars size="xs" tone="current" intervalMs={210} />
         </div>
         <div className="flex flex-col">
-          <span className="text-xs font-semibold text-black tracking-tight">
+          <span className="text-xs font-semibold text-[var(--text-primary)] tracking-tight">
             {label}
           </span>
-          <span className="text-[10px] text-black/45">
+          <span className="text-[10px] text-[var(--text-muted)]">
             Processing structured actions...
           </span>
         </div>
       </div>
 
       {showSkeletonLines && (
-        <div className="space-y-2 pt-1 border-t border-black/5">
-          <div className="h-2.5 w-4/5 rounded-full bg-black/10 animate-pulse" />
-          <div className="h-2.5 w-3/5 rounded-full bg-black/5 animate-pulse" />
+        <div className="space-y-2 pt-1 border-t border-[var(--border-surface)]">
+          <div className="h-2.5 w-4/5 rounded-full bg-[var(--progress-track)] animate-pulse" />
+          <div className="h-2.5 w-3/5 rounded-full bg-[var(--bg-supporting)] animate-pulse" />
         </div>
       )}
     </div>
@@ -278,14 +282,16 @@ export function DashboardSkeleton({
 }: DashboardSkeletonProps) {
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-200">
-      <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white px-5 py-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+      <div className="flex items-center justify-between rounded-2xl border border-[var(--border-surface)] bg-[var(--surface)] px-5 py-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
         <div className="space-y-2">
-          <div className="h-3 w-24 rounded-full bg-black/10 animate-pulse" />
-          <div className="h-6 w-48 rounded-lg bg-black/15 animate-pulse" />
+          <div className="h-3 w-24 rounded-full bg-[var(--progress-track)] animate-pulse" />
+          <div className="h-6 w-48 rounded-lg bg-[var(--bg-supporting)] animate-pulse" />
         </div>
-        <div className="flex items-center gap-3 rounded-xl border border-black/10 bg-black/[0.02] px-3.5 py-2">
-          <PelitaBars size="sm" tone="dark" />
-          <span className="text-xs font-medium text-black/70">{label}</span>
+        <div className="flex items-center gap-3 rounded-xl border border-[var(--border-surface)] bg-[var(--bg-supporting)] px-3.5 py-2">
+          <PelitaBars size="sm" tone="theme" />
+          <span className="text-xs font-medium text-[var(--text-secondary)]">
+            {label}
+          </span>
         </div>
       </div>
 
@@ -293,40 +299,40 @@ export function DashboardSkeleton({
         {[1, 2, 3].map((item) => (
           <div
             key={item}
-            className="rounded-2xl border border-black/10 bg-white p-5 space-y-4"
+            className="rounded-2xl border border-[var(--border-surface)] bg-[var(--surface)] p-5 space-y-4"
           >
             <div className="flex items-center justify-between">
-              <div className="h-3.5 w-24 rounded-full bg-black/10 animate-pulse" />
-              <div className="h-7 w-7 rounded-lg bg-black/5 animate-pulse" />
+              <div className="h-3.5 w-24 rounded-full bg-[var(--progress-track)] animate-pulse" />
+              <div className="h-7 w-7 rounded-lg bg-[var(--bg-supporting)] animate-pulse" />
             </div>
-            <div className="h-7 w-36 rounded-lg bg-black/15 animate-pulse" />
+            <div className="h-7 w-36 rounded-lg bg-[var(--progress-track)] animate-pulse" />
             <div className="space-y-2 pt-1">
-              <div className="h-2 w-full rounded-full bg-black/10 animate-pulse" />
-              <div className="h-2 w-2/3 rounded-full bg-black/5 animate-pulse" />
+              <div className="h-2 w-full rounded-full bg-[var(--progress-track)] animate-pulse" />
+              <div className="h-2 w-2/3 rounded-full bg-[var(--bg-supporting)] animate-pulse" />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-black/10 bg-white p-6 space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-black/5">
-          <div className="h-4 w-40 rounded-full bg-black/15 animate-pulse" />
-          <div className="h-8 w-24 rounded-lg bg-black/10 animate-pulse" />
+      <div className="rounded-2xl border border-[var(--border-surface)] bg-[var(--surface)] p-6 space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[var(--border-surface)]">
+          <div className="h-4 w-40 rounded-full bg-[var(--progress-track)] animate-pulse" />
+          <div className="h-8 w-24 rounded-lg bg-[var(--bg-supporting)] animate-pulse" />
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4].map((row) => (
             <div
               key={row}
-              className="flex items-center justify-between rounded-xl border border-black/5 p-3.5"
+              className="flex items-center justify-between rounded-xl border border-[var(--border-surface)] p-3.5"
             >
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-black/10 animate-pulse" />
+                <div className="h-9 w-9 rounded-lg bg-[var(--progress-track)] animate-pulse" />
                 <div className="space-y-1.5">
-                  <div className="h-3.5 w-36 rounded-full bg-black/15 animate-pulse" />
-                  <div className="h-2.5 w-24 rounded-full bg-black/10 animate-pulse" />
+                  <div className="h-3.5 w-36 rounded-full bg-[var(--progress-track)] animate-pulse" />
+                  <div className="h-2.5 w-24 rounded-full bg-[var(--bg-supporting)] animate-pulse" />
                 </div>
               </div>
-              <div className="h-4 w-20 rounded-full bg-black/10 animate-pulse" />
+              <div className="h-4 w-20 rounded-full bg-[var(--progress-track)] animate-pulse" />
             </div>
           ))}
         </div>
@@ -340,7 +346,7 @@ export function DashboardSkeleton({
 // ============================================================================
 export interface LoaderProps {
   mode?: "fullscreen" | "inline" | "mini" | "skeleton" | "ai-chat";
-  variant?: "dark" | "light";
+  variant?: "auto" | "dark" | "light";
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   label?: string;
   brandTitle?: string;
@@ -350,7 +356,7 @@ export interface LoaderProps {
 
 export function Loader({
   mode = "fullscreen",
-  variant = "dark",
+  variant = "auto",
   size,
   label,
   brandTitle = "PELITA",

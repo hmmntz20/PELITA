@@ -1,5 +1,7 @@
+// src/app/(auth)/layout.tsx
 import type { Metadata } from "next";
 import AuthHero from "@/components/auth-hero";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export const metadata: Metadata = {
   title: "PELITA — Personal Life Assistant",
@@ -13,10 +15,22 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Kiri: 25% (1/4), Background Hitam, Logo Putih di Tengah */}
-      <div className="w-full lg:w-[30%] bg-black flex flex-col items-center justify-center p-8 min-h-[30vh] lg:min-h-screen">
-        <div className="flex items-center gap-3 text-white">
+    <div
+      className="
+        min-h-screen flex flex-col lg:flex-row relative overflow-hidden
+        text-[var(--text-primary)] transition-colors duration-300
+        bg-[linear-gradient(180deg,var(--login-panel-bg)_0%,var(--login-panel-mid)_28%,var(--bg-main)_55%,var(--bg-main)_100%)]
+        lg:bg-[linear-gradient(90deg,var(--login-panel-bg)_0%,var(--login-panel-bg)_18%,var(--login-panel-mid)_38%,var(--bg-main)_62%,var(--bg-main)_100%)]
+      "
+    >
+      {/* Kiri: 30%, Transparan mengikuti bagian gelap gradien induk */}
+      <div className="w-full lg:w-[30%] bg-transparent flex flex-col items-center justify-center p-8 min-h-[28vh] lg:min-h-screen relative select-none">
+        <div className="absolute top-0 left-0 p-8 w-full flex items-center justify-start z-20">
+          <p className="hidden sm:flex items-center h-10 text-[0.65rem] tracking-[0.18em] uppercase text-[var(--text-muted)] font-medium">
+            ✦ Your everyday, a little lighter
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-[var(--login-logo-title)] transition-colors duration-300">
           {/* Logo PELITA */}
           <svg
             width="100"
@@ -24,7 +38,7 @@ export default function AuthLayout({
             viewBox="0 0 28 28"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-[#ededee]"
+            className="text-[var(--login-logo-title)] transition-colors duration-300"
           >
             <rect
               x="2"
@@ -51,25 +65,17 @@ export default function AuthLayout({
               fill="currentColor"
             />
           </svg>
-          <h1
-            className="text-4xl font-bold uppercase tracking-[0.38em] pl-[0.38em] text-white"
-          >
+          <h1 className="text-4xl font-bold uppercase tracking-[0.38em] pl-[0.38em] text-[var(--login-logo-title)] transition-colors duration-300">
             PELITA
           </h1>
         </div>
       </div>
 
-      {/* Kanan: 75% (3/4), Background Abu-abu terang, Berisi Form */}
-      <div className="w-full lg:w-[70%] bg-[#ededee] flex flex-col min-h-[70vh] lg:min-h-screen relative">
-        
-        {/* Tagline Kanan Atas */}
-        <div className="absolute top-0 left-0 p-8 w-full flex justify-between">
-          <p className="text-[0.65rem] tracking-[0.18em] uppercase text-foreground/40 font-medium hidden sm:block">
-            ✦ Your everyday, a little lighter
-          </p>
-          <button>
-            toggle 
-          </button>
+      {/* Kanan: 70%, Transparan mengikuti bagian gradien yang memudar ke --bg-main */}
+      <div className="w-full lg:w-[70%] bg-transparent flex flex-col min-h-[72vh] lg:min-h-screen relative">
+        {/* Tagline & Tombol Trigger 1-Klik di Kanan Atas */}
+        <div className="absolute top-0 left-0 p-8 w-full flex items-center justify-end z-20">          
+          <ThemeToggle />
         </div>
 
         {/* Area Utama Form */}

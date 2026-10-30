@@ -27,7 +27,9 @@ function LoaderDebug() {
   }, []);
 
   return (
-    <p className="absolute bottom-8 text-xs text-white/50 font-mono">{info}</p>
+    <p className="absolute bottom-8 text-xs text-[var(--text-muted)] font-mono">
+      {info}
+    </p>
   );
 }
 
@@ -158,38 +160,38 @@ function SignInForm() {
   return (
     <>
       {showFullscreenLoader && (
-        <Loader mode="fullscreen" variant="light" label={fullscreenLabel}>
+        <Loader mode="fullscreen" variant="auto" label={fullscreenLabel}>
           {isPreviewingLoader && <LoaderDebug />}
         </Loader>
       )}
 
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-black/5 p-7 flex flex-col gap-5">
+      <div className="w-full max-w-sm bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--border-surface)] p-7 flex flex-col gap-5 transition-colors duration-200">
         {/* Icon banner */}
-        <div className="w-full h-20 bg-[#efefee] rounded-xl flex items-center justify-center border">
+        <div className="w-full h-20 bg-[var(--bg-supporting)] rounded-xl flex items-center justify-center border border-[var(--border-surface)] transition-colors">
           <Calendar
-            className="w-7 h-7 text-foreground/40"
+            className="w-7 h-7 text-[var(--text-muted)]"
             strokeWidth={1.5}
           />
         </div>
 
         {/* Label + Title */}
         <div>
-          <p className="text-[0.6rem] tracking-[0.18em] uppercase text-foreground/40 font-medium mb-1">
+          <p className="text-[0.6rem] tracking-[0.18em] uppercase text-[var(--text-muted)] font-medium mb-1">
             Welcome back
           </p>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Sign In
           </h2>
-          <p className="text-xs text-foreground/45 mt-1">
+          <p className="text-xs text-[var(--text-secondary)] mt-1">
             Your day, beautifully in balance.
           </p>
         </div>
 
         {/* Success Alert (Monochrome) */}
         {successMessage && (
-          <div className="rounded-xl border border-black/15 bg-black/[0.03] p-3 text-xs text-foreground flex items-start gap-2.5">
+          <div className="rounded-xl border border-[var(--border-input)] bg-[var(--bg-supporting)] p-3 text-xs text-[var(--text-primary)] flex items-start gap-2.5">
             <svg
-              className="w-4 h-4 shrink-0 text-foreground mt-0.5"
+              className="w-4 h-4 shrink-0 text-[var(--icon-important)] mt-0.5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -207,10 +209,10 @@ function SignInForm() {
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="rounded-xl border border-black/20 bg-black/[0.04] p-3 text-xs text-foreground flex flex-col gap-2">
+          <div className="rounded-xl border border-[var(--border-input)] bg-[var(--bg-supporting)] p-3 text-xs text-[var(--text-primary)] flex flex-col gap-2">
             <div className="flex items-start gap-2.5">
               <svg
-                className="w-4 h-4 shrink-0 text-foreground mt-0.5"
+                className="w-4 h-4 shrink-0 text-[var(--icon-important)] mt-0.5"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -225,10 +227,10 @@ function SignInForm() {
               </div>
             </div>
             {devVerifyUrl && (
-              <div className="pt-1.5 border-t border-black/10">
+              <div className="pt-1.5 border-t border-[var(--border-surface)]">
                 <a
                   href={devVerifyUrl}
-                  className="inline-block font-semibold text-foreground underline"
+                  className="inline-block font-semibold text-[var(--text-primary)] underline"
                 >
                   [Dev Mode] Click here to verify email now &rarr;
                 </a>
@@ -243,12 +245,12 @@ function SignInForm() {
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="signin-email"
-              className="text-xs font-medium text-foreground/70"
+              className="text-xs font-medium text-[var(--text-secondary)]"
             >
               Email
             </label>
             <div className="relative flex items-center">
-              <span className="absolute left-3 text-foreground/30">
+              <span className="absolute left-3 text-[var(--text-muted)]">
                 <svg
                   width="15"
                   height="15"
@@ -282,7 +284,7 @@ function SignInForm() {
                 disabled={isBusy}
                 placeholder="you@example.com"
                 required
-                className="w-full h-10 rounded-lg border border-black/10 bg-transparent pl-9 pr-3 text-sm text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10 transition disabled:opacity-50"
+                className="w-full h-10 rounded-lg border border-[var(--border-input)] bg-transparent pl-9 pr-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--text-primary)] focus:ring-2 focus:ring-[var(--text-primary)]/10 transition disabled:opacity-50"
               />
             </div>
           </div>
@@ -292,19 +294,19 @@ function SignInForm() {
             <div className="flex items-center justify-between">
               <label
                 htmlFor="signin-password"
-                className="text-xs font-medium text-foreground/70"
+                className="text-xs font-medium text-[var(--text-secondary)]"
               >
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-foreground/50 hover:text-foreground transition"
+                className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition"
               >
                 Forgot Password?
               </Link>
             </div>
             <div className="relative flex items-center">
-              <span className="absolute left-3 text-foreground/30">
+              <span className="absolute left-3 text-[var(--text-muted)]">
                 <svg
                   width="15"
                   height="15"
@@ -338,12 +340,12 @@ function SignInForm() {
                 disabled={isBusy}
                 placeholder="At least 8 characters"
                 required
-                className="w-full h-10 rounded-lg border border-black/10 bg-transparent pl-9 pr-9 text-sm text-foreground placeholder:text-foreground/30 outline-none focus:border-foreground/30 focus:ring-2 focus:ring-foreground/10 transition disabled:opacity-50"
+                className="w-full h-10 rounded-lg border border-[var(--border-input)] bg-transparent pl-9 pr-9 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--text-primary)] focus:ring-2 focus:ring-[var(--text-primary)]/10 transition disabled:opacity-50"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 text-foreground/30 hover:text-foreground/60 transition"
+                className="absolute right-3 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition cursor-pointer"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
@@ -407,7 +409,7 @@ function SignInForm() {
             id="signin-submit"
             type="submit"
             disabled={isBusy}
-            className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold flex items-center justify-center gap-2.5 hover:bg-foreground/85 active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full h-11 rounded-xl bg-[var(--action-primary)] text-[var(--action-primary-text)] text-sm font-semibold flex items-center justify-center gap-2.5 hover:bg-[var(--action-primary-hover)] active:translate-y-px transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isLoading || isRedirecting ? (
               <Loader
@@ -439,9 +441,9 @@ function SignInForm() {
 
         {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-black/8" />
-          <span className="text-[0.7rem] text-foreground/30">or</span>
-          <div className="flex-1 h-px bg-black/8" />
+          <div className="flex-1 h-px bg-[var(--border-surface)]" />
+          <span className="text-[0.7rem] text-[var(--text-muted)]">or</span>
+          <div className="flex-1 h-px bg-[var(--border-surface)]" />
         </div>
 
         {/* Google button */}
@@ -450,7 +452,7 @@ function SignInForm() {
           type="button"
           disabled={isBusy}
           onClick={handleGoogleSignIn}
-          className="w-full h-10 rounded-xl border border-black/10 bg-transparent text-sm font-medium text-foreground/70 flex items-center justify-center gap-2.5 hover:bg-black/[0.03] active:translate-y-px transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-10 rounded-xl border border-[var(--border-input)] bg-transparent text-sm font-medium text-[var(--text-secondary)] flex items-center justify-center gap-2.5 hover:bg-[var(--bg-supporting)] hover:text-[var(--text-primary)] active:translate-y-px transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isGoogleRedirecting ? (
             <Loader mode="inline" label="Connecting to Google..." />
@@ -490,11 +492,11 @@ function SignInForm() {
         </button>
 
         {/* Footer */}
-        <p className="text-center text-xs text-foreground/40">
+        <p className="text-center text-xs text-[var(--text-muted)]">
           New here?{" "}
           <Link
             href="/sign-up"
-            className="text-foreground/70 font-medium hover:text-foreground transition"
+            className="text-[var(--text-secondary)] font-medium hover:text-[var(--text-primary)] transition"
           >
             Sign Up
           </Link>
@@ -505,7 +507,7 @@ function SignInForm() {
           <button
             type="button"
             onClick={previewLoader}
-            className="mt-1 text-[11px] text-foreground/35 hover:text-foreground/70 underline transition text-center"
+            className="mt-1 text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)] underline transition text-center cursor-pointer"
           >
             [Dev] Test PELITA Fullscreen Loader (5s)
           </button>
@@ -517,7 +519,9 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<Loader mode="fullscreen" label="Loading Sign In..." />}>
+    <Suspense
+      fallback={<Loader mode="fullscreen" variant="auto" label="Loading Sign In..." />}
+    >
       <SignInForm />
     </Suspense>
   );
